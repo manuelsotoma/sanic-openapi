@@ -1,6 +1,21 @@
 from collections import defaultdict
 from datetime import date, datetime
 
+def import_model(model):
+    a = model.__dict__
+    if not '__module__' in dict(model.__dict__):
+        return model
+    
+    class default:
+        pass
+    
+    default_dict = dict(default.__dict__)
+    model_dict   = dict(model.__dict__)
+    
+    for key in default_dict.keys():
+        model_dict.pop(key)
+
+    return model_dict
 
 class Field:
     def __init__(self, description=None, required=None, name=None):
@@ -176,15 +191,16 @@ def serialize_schema(schema):
 
 
 class RouteSpec:
-    consumes = None
+    consumes              = None
     consumes_content_type = None
-    produces = None
+    produces              = None
     produces_content_type = None
-    summary = None
-    description = None
-    operation = None
-    blueprint = None
-    tags = None
+    summary               = None
+    description           = None
+    operation             = None
+    blueprint             = None
+    tags                  = None
+    options               = None
 
     def __init__(self):
         self.tags = []
@@ -251,5 +267,12 @@ def produces(*args, content_type=None):
 def tag(name):
     def inner(func):
         route_specs[func].tags.append(name)
+        return func
+    return inner
+#### added method options
+def options(*args, content_type=None):
+    def inner(func):
+        if args:
+            route_specs[func].options = args[0] if len(args) == 1 else args
         return func
     return inner

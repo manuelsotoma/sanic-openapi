@@ -2,8 +2,8 @@ import re
 from itertools import repeat
 
 from sanic.blueprints import Blueprint
-from sanic.response import json
-from sanic.views import CompositionView
+from sanic.response   import json
+from sanic.views      import CompositionView
 
 from .doc import route_specs, RouteSpec, serialize_schema, definitions
 
@@ -86,8 +86,8 @@ def build_spec(app, loop):
             path_parameters = [{
                 **serialize_schema(parameter.cast),
                 'required': True,
-                'in': 'path',
-                'name': parameter.name,
+                'in'      : 'path',
+                'name'    : parameter.name,
             } for parameter in route.parameters]
             query_string_parameters = []
             body_parameters = []
@@ -108,6 +108,18 @@ def build_spec(app, loop):
                         'in': 'body',
                         'name': 'body',
                     })
+            
+            if route_spec.options:
+                if _method in ('GET', 'DELETE'):
+                    raise Exception('used "doc.options" instead of "doc.consumes" on GET/DELETE method')
+                else:
+                    spec = serialize_schema(route_spec.options)
+                    for name, prop_spec in spec['properties'].items():
+                            query_string_parameters.append({
+                                **prop_spec,
+                                'in': 'query',
+                                'name': name,
+                            })
 
             endpoint = remove_nulls({
                 'operationId': route_spec.operation or route.name,
