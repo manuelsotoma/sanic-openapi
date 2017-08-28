@@ -18,10 +18,11 @@ def import_model(model):
     return model_dict
 
 class Field:
-    def __init__(self, description=None, required=None, name=None):
+    def __init__(self, description=None, required=None, name=None, choices=None):
         self.name = name
         self.description = description
         self.required = required
+        self.choices = choices
 
     def serialize(self):
         output = {}
@@ -31,6 +32,8 @@ class Field:
             output['description'] = self.description
         if self.required is not None:
             output['required'] = self.required
+        if self.choices is not None:
+            output['enum'] = self.choices
         return output
 
 
@@ -39,6 +42,15 @@ class Integer(Field):
         return {
             "type": "integer",
             "format": "int64",
+            **super().serialize()
+        }
+
+
+class Float(Field):
+    def serialize(self):
+        return {
+            "type": "number",
+            "format": "double",
             **super().serialize()
         }
 
@@ -66,7 +78,8 @@ class Tuple(Field):
 class Date(Field):
     def serialize(self):
         return {
-            "type": "date",
+            "type": "string",
+            "format": "date",
             **super().serialize()
         }
 
@@ -74,7 +87,8 @@ class Date(Field):
 class DateTime(Field):
     def serialize(self):
         return {
-            "type": "dateTime",
+            "type": "string",
+            "format": "date-time",
             **super().serialize()
         }
 
@@ -138,9 +152,7 @@ class Object(Field):
     def serialize(self):
         return {
             "type": "object",
-            "schema": {
-                "$ref": "#/definitions/{}".format(self.object_name)
-            },
+            "$ref": "#/definitions/{}".format(self.object_name),
             **super().serialize()
         }
 
@@ -160,6 +172,8 @@ def serialize_schema(schema):
             return List().serialize()
         elif schema is int:
             return Integer().serialize()
+        elif schema is float:
+            return Float().serialize()
         elif schema is str:
             return String().serialize()
         elif schema is bool:
@@ -195,12 +209,21 @@ class RouteSpec:
     consumes_content_type = None
     produces              = None
     produces_content_type = None
+<<<<<<< HEAD
     summary               = None
     description           = None
     operation             = None
     blueprint             = None
     tags                  = None
     options               = None
+=======
+    summary = None
+    description = None
+    operation = None
+    blueprint = None
+    tags = None
+    exclude = None
+>>>>>>> 561371cf45a86a33dbbac4ee10bc361cb8ab9124
 
     def __init__(self):
         self.tags = []
@@ -211,7 +234,8 @@ route_specs = defaultdict(RouteSpec)
 
 
 def route(summary=None, description=None, consumes=None, produces=None,
-          consumes_content_type=None, produces_content_type=None):
+          consumes_content_type=None, produces_content_type=None,
+          exclude=None):
     def inner(func):
         route_spec = route_specs[func]
 
@@ -227,7 +251,16 @@ def route(summary=None, description=None, consumes=None, produces=None,
             route_spec.consumes_content_type = consumes_content_type
         if produces_content_type is not None:
             route_spec.produces_content_type = produces_content_type
+        if exclude is not None:
+            route_spec.exclude = exclude
 
+        return func
+    return inner
+
+
+def exclude(boolean):
+    def inner(func):
+        route_specs[func].exclude = boolean
         return func
     return inner
 
