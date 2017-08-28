@@ -209,21 +209,13 @@ class RouteSpec:
     consumes_content_type = None
     produces              = None
     produces_content_type = None
-<<<<<<< HEAD
     summary               = None
     description           = None
     operation             = None
     blueprint             = None
     tags                  = None
     options               = None
-=======
-    summary = None
-    description = None
-    operation = None
-    blueprint = None
-    tags = None
-    exclude = None
->>>>>>> 561371cf45a86a33dbbac4ee10bc361cb8ab9124
+    exclude               = None
 
     def __init__(self):
         self.tags = []
